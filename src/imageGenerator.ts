@@ -8,7 +8,7 @@ export async function addTextToImage(
   fontFamily: string,
   fontSize: number,
   fontColor: string
-) {
+): Promise<string> {
   const image = await loadImage(inputImagePath)
   const canvas = createCanvas(image.width, image.height)
 
@@ -36,7 +36,15 @@ export async function addTextToImage(
   const out = fs.createWriteStream(outputImagePath)
   const stream = canvas.createPNGStream()
   stream.pipe(out)
-  out.on('finish', () => {
-    console.log(`Image saved as ${outputImagePath}`)
+
+  return await new Promise((resolve, reject) => {
+    out
+      .on('finish', () => {
+        console.log(`Image saved as ${outputImagePath}`)
+        resolve(outputImagePath)
+      })
+      .on('error', (err) => {
+        reject(err)
+      })
   })
 }
