@@ -1,6 +1,6 @@
 import 'cross-fetch/polyfill'
 import { Color, Gender, Size } from '../types'
-import { getVariant } from './variant'
+import { getAllVariants, getVariant } from './variant'
 
 interface PrintfulClientOptions {
   headers?: any
@@ -107,7 +107,8 @@ export class PrintfulClient {
     imageBackUrl: string
     imageLabelInsideUrl: string
   }): Promise<ResponseBody> {
-    const variantId = getVariant({ size, color, gender })
+    //const variantId = getVariant({ size, color, gender })
+    const variants = getAllVariants()
     const isIgnored = true
     return this.post('store/products', {
       sync_product: {
@@ -116,35 +117,15 @@ export class PrintfulClient {
         // thumbnail: 'https://cdn.logo.com/hotlink-ok/logo-social.png',
         is_ignored: isIgnored
       },
-      sync_variants: [
-        {
-          external_id: 'nan_' + number + '_variant_' + Date.now(),
-          variant_id: variantId,
-          retail_price: price,
-          is_ignored: isIgnored,
-          files: [
-            {
-              type: 'front',
-              url: imageFrontUrl
-            },
-            {
-              type: 'back',
-              url: imageBackUrl
-            },
-            {
-              type: 'label_inside',
-              url: imageLabelInsideUrl,
-              options: [
-                {
-                  id: 'template_type',
-                  value: 'native'
-                }
-              ]
-            }
-          ],
-          options: []
-        }
-      ]
+      sync_variants: buildVariantArray({
+        number: number,
+        price: price,
+        variants: variants,
+        imageFrontUrl: imageFrontUrl,
+        imageBackUrl: imageBackUrl,
+        imageLabelInsideUrl: imageLabelInsideUrl,
+        isIgnored: isIgnored
+      })
     })
   }
 }
@@ -156,4 +137,50 @@ export async function request<RequestBody, ResponseBody>(
   const client = new PrintfulClient(token)
 
   return client.request<RequestBody, ResponseBody>({ endpoint, ...rest })
+}
+
+const buildVariantArray = ({
+  number,
+  price,
+  variants,
+  imageFrontUrl,
+  imageBackUrl,
+  imageLabelInsideUrl,
+  isIgnored
+}: {
+  number: number
+  price: number
+  variants: number[]
+  imageFrontUrl: string
+  imageBackUrl: string
+  imageLabelInsideUrl: string
+  isIgnored: boolean
+}) => {
+  return variants.map((variantId) => ({
+    //external_id: 'nan_' + number + '_variant_' + Date.now(),
+    variant_id: variantId,
+    retail_price: price,
+    is_ignored: isIgnored,
+    files: [
+      {
+        type: 'front',
+        url: imageFrontUrl
+      },
+      {
+        type: 'back',
+        url: imageBackUrl
+      },
+      {
+        type: 'label_inside',
+        url: imageLabelInsideUrl,
+        options: [
+          {
+            id: 'template_type',
+            value: 'native'
+          }
+        ]
+      }
+    ],
+    options: []
+  }))
 }

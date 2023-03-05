@@ -2,7 +2,9 @@ import { Color, Gender, Size } from '../types'
 
 // male tshirt: PRODUCT: 428 - VARIANT: 11577
 // unisex:
-type VariantsPerSize = { id: number; gender: Gender; color: Color }[]
+type VariantPerSize = { id: number; gender: Gender; color: Color }
+type VariantsPerSize = VariantPerSize[]
+
 const VARIANTS: Record<Size, VariantsPerSize> = {
   S: [
     {
@@ -113,4 +115,8 @@ export const getVariant = ({
   }
   console.log(`Getting variant for ${size}-${color}-${gender}: ${result.id}`)
   return result.id
+}
+
+export const getAllVariants = (): number[] => {
+  return [473, 474, 504, 505, 535, 536, 566, 567]
 }
