@@ -1,9 +1,10 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import { PrintfulClient, SIZE } from './printful'
+import { PrintfulClient } from './printful'
 import { addTextToImage } from './imageGenerator'
 import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import { saveToS3 } from './s3'
+import { Color, Gender, Size } from './types'
 
 const PRINTFUL_API_TOKEN = 'UH2F6fpliQBiOcvEgK1KoNnkggQPWPNwYOaHa0Ng'
 const PRINTFUL_STORE_ID = '10065412'
@@ -12,14 +13,18 @@ const S3_CONFIG: S3ClientConfig = {
 }
 const S3_BUCKET = 'notanumber-tshirt'
 const S3_KEY_PREFIX = 'images_front/'
-const IMAGE_BACK_URL = 'http://abc'
+const IMAGE_BACK_URL = 'https://cdn.logo.com/hotlink-ok/logo-social.png'
+const IMAGE_LABEL_INSIDE_URL = 'https://cdn.logo.com/hotlink-ok/logo-social.png'
 
 const inputImagePath = path.join(__dirname, 'images/front.png')
 const SAVE_ON_S3 = true
 const CREATE_ON_PRINTFUL = true
 const NUM_FROM = 1 // Incuded
 const NUM_TO = 2 // Excluded
-const T_SHIRT_SIZE: SIZE = 'M'
+const T_SHIRT_SIZE: Size = 'M'
+const T_SHIRT_GENDER: Gender = 'WOMAN'
+const T_SHIRT_COLOR: Color = 'white'
+
 const printful = new PrintfulClient(PRINTFUL_API_TOKEN, {
   headers: {
     'X-PF-Store-Id': PRINTFUL_STORE_ID
@@ -43,7 +48,16 @@ for (let number = NUM_FROM; number < NUM_TO; number++) {
             if (CREATE_ON_PRINTFUL) {
               const imageFrontUrl = imgUrl
               printful
-                .createNaNProductInStore(number, 19.0, T_SHIRT_SIZE, imageFrontUrl)
+                .createNaNProductInStore({
+                  number: number,
+                  price: 19.0,
+                  size: T_SHIRT_SIZE,
+                  gender: T_SHIRT_GENDER,
+                  color: T_SHIRT_COLOR,
+                  imageFrontUrl: imageFrontUrl,
+                  imageBackUrl: IMAGE_BACK_URL,
+                  imageLabelInsideUrl: IMAGE_LABEL_INSIDE_URL
+                })
                 .then((data) => {
                   const productId = 'xxxx'
                   console.log(

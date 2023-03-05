@@ -1,27 +1,12 @@
 import 'cross-fetch/polyfill'
+import { Color, Gender, Size } from '../types'
+import { getVariant } from './variant'
 
 interface PrintfulClientOptions {
   headers?: any
   baseUrl?: string
 }
-export type SIZE = 'S' | 'M' | 'L' | 'XL'
 
-type SizeObject = Record<SIZE, { variantId: number }>
-
-const sizeObj: SizeObject = {
-  S: {
-    variantId: 11577
-  },
-  M: {
-    variantId: 11577
-  },
-  L: {
-    variantId: 11577
-  },
-  XL: {
-    variantId: 11577
-  }
-}
 export class PrintfulClient {
   private readonly options: PrintfulClientOptions
   private headers: any
@@ -103,32 +88,58 @@ export class PrintfulClient {
     })
   }
 
-  createNaNProductInStore<RequestBody, ResponseBody>(
-    number: number,
-    price: number,
-    size: SIZE,
-    image_front_url: string
-  ): Promise<ResponseBody> {
-    const variantId = sizeObj[size].variantId
-
+  createNaNProductInStore<RequestBody, ResponseBody>({
+    number,
+    price,
+    size,
+    color,
+    gender,
+    imageFrontUrl,
+    imageBackUrl,
+    imageLabelInsideUrl
+  }: {
+    number: number
+    price: number
+    size: Size
+    color: Color
+    gender: Gender
+    imageFrontUrl: string
+    imageBackUrl: string
+    imageLabelInsideUrl: string
+  }): Promise<ResponseBody> {
+    const variantId = getVariant({ size, color, gender })
+    const isIgnored = true
     return this.post('store/products', {
       sync_product: {
         external_id: 'nan_' + number + '_' + Date.now(),
         name: 'T-shirt NaN ' + number,
-        thumbnail: 'https://cdn.logo.com/hotlink-ok/logo-social.png',
-        is_ignored: true
+        // thumbnail: 'https://cdn.logo.com/hotlink-ok/logo-social.png',
+        is_ignored: isIgnored
       },
       sync_variants: [
         {
           external_id: 'nan_' + number + '_variant_' + Date.now(),
           variant_id: variantId,
           retail_price: price,
-          is_ignored: false,
-          product: null,
+          is_ignored: isIgnored,
           files: [
             {
               type: 'front',
-              url: image_front_url
+              url: imageFrontUrl
+            },
+            {
+              type: 'back',
+              url: imageBackUrl
+            },
+            {
+              type: 'label_inside',
+              url: imageLabelInsideUrl,
+              options: [
+                {
+                  id: 'template_type',
+                  value: 'native'
+                }
+              ]
             }
           ],
           options: []
